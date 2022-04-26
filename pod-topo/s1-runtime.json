@@ -4,15 +4,9 @@
   "bmv2_json": "build/basic.json",
   "table_entries": [
     {
-      "table": "MyIngress.test",
-      "default_action": true,
-      "action_name": "MyIngress.drop",
-      "action_params": { }
-    },
-    {
-      "table": "MyIngress.test",
+      "table": "MyIngress.lvl2",
       "match": {
-        "hdr.ipv4.dstAddr": ["10.0.1.1", 32]
+        "hdr.ipv4.dstAddr": ["10.0.1.1"]
       },
       "action_name": "MyIngress.set_next_hop",
       "action_params": {
@@ -21,9 +15,9 @@
       }
     },
     {
-      "table": "MyIngress.test",
+      "table": "MyIngress.lvl2",
       "match": {
-        "hdr.ipv4.dstAddr": ["10.0.2.2", 32]
+        "hdr.ipv4.dstAddr": ["10.0.2.2"]
       },
       "action_name": "MyIngress.set_next_hop",
       "action_params": {
@@ -32,25 +26,58 @@
       }
     },
     {
-      "table": "MyIngress.test",
+      "table": "MyIngress.lvl3",
       "match": {
-        "hdr.ipv4.dstAddr": ["10.0.3.3", 32]
+        "hdr.ipv4.dstAddr": ["10.0.3.3"]
       },
       "action_name": "MyIngress.set_next_hop",
       "action_params": {
-        "dstAddr": "08:00:00:00:03:00",
+        "dstAddr": "08:00:00:00:03:33",
         "port": 3
       }
     },
     {
-      "table": "MyIngress.test",
+      "table": "MyIngress.lvl1",
       "match": {
-        "hdr.ipv4.dstAddr": ["10.0.4.4", 32]
+        "hdr.ipv4.dstAddr": ["10.0.4.4"]
       },
       "action_name": "MyIngress.set_next_hop",
       "action_params": {
-        "dstAddr": "08:00:00:00:04:00",
+        "dstAddr": "08:00:00:00:04:44",
         "port": 4
+      }
+    },
+    {
+      "table": "MyIngress.lvl3",
+      "match": {
+        "hdr.ipv4.dstAddr": ["10.0.5.5"]
+      },
+      "action_name": "MyIngress.set_next_hop",
+      "action_params": {
+        "dstAddr": "08:00:00:00:05:55",
+        "port": 5
+      }
+    },
+    {
+      "table": "MyIngress.lvl2",
+      "match": {
+        "hdr.ipv4.dstAddr": ["10.0.6.6"]
+      },
+      "action_name": "MyIngress.set_next_hop",
+      "action_params": {
+        "dstAddr": "08:00:00:00:06:66",
+        "port": 6
+      }
+    },
+    {
+      "table": "MyIngress.lvl3",
+      "match": {
+        "hdr.ipv4.dstAddr": ["10.0.7.7"]
+      },
+      "action_name": "MyIngress.set_next_hop",
+      "action_params": {
+        "dstAddr": "08:00:00:00:07:77",
+        "port": 7
       }
     }
   ]
