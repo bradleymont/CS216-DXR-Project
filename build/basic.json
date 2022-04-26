@@ -176,7 +176,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "basic.p4",
-        "line" : 236,
+        "line" : 176,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -193,7 +193,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "basic.p4",
-        "line" : 214,
+        "line" : 154,
         "column" : 8,
         "source_fragment" : "update_checksum( ..."
       },
@@ -249,16 +249,26 @@
   "learn_lists" : [],
   "actions" : [
     {
-      "name" : "MyIngress.comparison",
+      "name" : "MyIngress.forward_using_binary_search",
       "id" : 0,
       "runtime_data" : [],
-      "primitives" : []
-    },
-    {
-      "name" : "MyIngress.set_next_hop",
-      "id" : 1,
-      "runtime_data" : [],
-      "primitives" : []
+      "primitives" : [
+        {
+          "op" : "mark_to_drop",
+          "parameters" : [
+            {
+              "type" : "header",
+              "value" : "standard_metadata"
+            }
+          ],
+          "source_info" : {
+            "filename" : "basic.p4",
+            "line" : 116,
+            "column" : 8,
+            "source_fragment" : "mark_to_drop(standard_metadata)"
+          }
+        }
+      ]
     }
   ],
   "pipelines" : [
@@ -274,13 +284,13 @@
       "init_table" : "node_2",
       "tables" : [
         {
-          "name" : "MyIngress.l1_binsearch",
+          "name" : "MyIngress.ipv4_exact",
           "id" : 0,
           "source_info" : {
             "filename" : "basic.p4",
-            "line" : 167,
+            "line" : 119,
             "column" : 10,
-            "source_fragment" : "l1_binsearch"
+            "source_fragment" : "ipv4_exact"
           },
           "key" : [
             {
@@ -292,44 +302,22 @@
           ],
           "match_type" : "exact",
           "type" : "simple",
-          "max_size" : 1,
+          "max_size" : 1024,
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [1, 0],
-          "actions" : ["MyIngress.set_next_hop", "MyIngress.comparison"],
+          "action_ids" : [0],
+          "actions" : ["MyIngress.forward_using_binary_search"],
           "base_default_next" : null,
           "next_tables" : {
-            "MyIngress.set_next_hop" : null,
-            "MyIngress.comparison" : null
+            "MyIngress.forward_using_binary_search" : null
           },
           "default_entry" : {
             "action_id" : 0,
-            "action_const" : true,
+            "action_const" : false,
             "action_data" : [],
-            "action_entry_const" : true
-          },
-          "entries" : [
-            {
-              "source_info" : {
-                "filename" : "basic.p4",
-                "line" : 176,
-                "column" : 5,
-                "source_fragment" : "4 : set_next_hop()"
-              },
-              "match_key" : [
-                {
-                  "match_type" : "exact",
-                  "key" : "0x00000004"
-                }
-              ],
-              "action_entry" : {
-                "action_id" : 1,
-                "action_data" : []
-              },
-              "priority" : 1
-            }
-          ]
+            "action_entry_const" : false
+          }
         }
       ],
       "action_profiles" : [],
@@ -339,7 +327,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "basic.p4",
-            "line" : 192,
+            "line" : 131,
             "column" : 12,
             "source_fragment" : "hdr.ipv4.isValid()"
           },
@@ -355,7 +343,7 @@
             }
           },
           "false_next" : null,
-          "true_next" : "MyIngress.l1_binsearch"
+          "true_next" : "MyIngress.ipv4_exact"
         }
       ]
     },
@@ -364,7 +352,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "basic.p4",
-        "line" : 202,
+        "line" : 142,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
@@ -380,7 +368,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "basic.p4",
-        "line" : 214,
+        "line" : 154,
         "column" : 8,
         "source_fragment" : "update_checksum( ..."
       },

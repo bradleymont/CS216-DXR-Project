@@ -5,8 +5,8 @@
 const bit<16> TYPE_IPV4 = 0x800;
 
 /*************************************************************************
- *********************** H E A D E R S  ***********************************
- *************************************************************************/
+*********************** H E A D E R S  ***********************************
+*************************************************************************/
 
 typedef bit<9>  egressSpec_t;
 typedef bit<48> macAddr_t;
@@ -43,13 +43,13 @@ struct headers {
 }
 
 /*************************************************************************
- *********************** P A R S E R  ***********************************
- *************************************************************************/
+*********************** P A R S E R  ***********************************
+*************************************************************************/
 
 parser MyParser(packet_in packet,
-        out headers hdr,
-        inout metadata meta,
-        inout standard_metadata_t standard_metadata) {
+                out headers hdr,
+                inout metadata meta,
+                inout standard_metadata_t standard_metadata) {
 
     state start {
         transition parse_ethernet;
@@ -58,7 +58,7 @@ parser MyParser(packet_in packet,
     state parse_ethernet {
         packet.extract(hdr.ethernet);
         transition select(hdr.ethernet.etherType) {
-TYPE_IPV4: parse_ipv4;
+            TYPE_IPV4: parse_ipv4;
             default: accept;
         }
     }
@@ -71,8 +71,8 @@ TYPE_IPV4: parse_ipv4;
 }
 
 /*************************************************************************
- ************   C H E C K S U M    V E R I F I C A T I O N   *************
- *************************************************************************/
+************   C H E C K S U M    V E R I F I C A T I O N   *************
+*************************************************************************/
 
 control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
     apply {  }
@@ -80,61 +80,60 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
 
 
 /*************************************************************************
- **************  I N G R E S S   P R O C E S S I N G   *******************
- *************************************************************************/
+**************  I N G R E S S   P R O C E S S I N G   *******************
+*************************************************************************/
 
 control MyIngress(inout headers hdr,
-        inout metadata meta,
-        inout standard_metadata_t standard_metadata) {
-
+                  inout metadata meta,
+                  inout standard_metadata_t standard_metadata) {
     action drop() {
         mark_to_drop(standard_metadata);
     }
 
-    action set_next_hop(macAddr_t dstAddr, egressSpec_t port) {
+    // keeping as a reference for now
+    action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
         standard_metadata.egress_spec = port;
         hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
         hdr.ethernet.dstAddr = dstAddr;
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
     }
 
+    // keeping as a reference for now
+    table ipv4_lpm {
+        key = {
+            hdr.ipv4.dstAddr: lpm;
+        }
+        actions = {
+            ipv4_forward;
+            drop;
+            NoAction;
+        }
+        size = 1024;
+        default_action = drop();
+    }
 
-    table test {
-	key = {
-	    hdr.ipv4.dstAddr : exact;
-	}
-	actions = {
-	   set_next_hop;
-       drop;
-	}
-	const entries = {
-	    10.0.2.2 : set_next_hop();
-	}
-       const default_action = drop; 
+    action forward_using_binary_search() {
+        mark_to_drop(standard_metadata);
+    }
+
+    table ipv4_exact {
+        key = {
+            hdr.ipv4.dstAddr: exact;
+        }
+        actions = {
+            forward_using_binary_search;
+        }
+        size = 1024;
+        default_action = forward_using_binary_search();
     }
 
     apply {
         if (hdr.ipv4.isValid()) {
-            test.apply();
+            //ipv4_lpm.apply();
+            ipv4_exact.apply();
         }
     }
 }
-
-/*
-    table l1_binsearch {
-	key = {
-	    hdr.ipv4.dstAddr : exact;
-	}
-	actions = {
-	   set_next_hop;
-	   comparison;
-	}
-	const entries = {
-	    4 : set_next_hop();
-	}
-       const default_action = comparison; 
-    }
-*/
 
 /*************************************************************************
 ****************  E G R E S S   P R O C E S S I N G   *******************

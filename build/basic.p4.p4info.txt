@@ -3,9 +3,9 @@ pkg_info {
 }
 tables {
   preamble {
-    id: 34514079
-    name: "MyIngress.l1_binsearch"
-    alias: "l1_binsearch"
+    id: 33757179
+    name: "MyIngress.ipv4_exact"
+    alias: "ipv4_exact"
   }
   match_fields {
     id: 1
@@ -14,27 +14,15 @@ tables {
     match_type: EXACT
   }
   action_refs {
-    id: 23610595
+    id: 23039581
   }
-  action_refs {
-    id: 32258301
-  }
-  const_default_action_id: 32258301
   size: 1024
-  is_const_table: true
 }
 actions {
   preamble {
-    id: 32258301
-    name: "MyIngress.comparison"
-    alias: "comparison"
-  }
-}
-actions {
-  preamble {
-    id: 23610595
-    name: "MyIngress.set_next_hop"
-    alias: "set_next_hop"
+    id: 23039581
+    name: "MyIngress.forward_using_binary_search"
+    alias: "forward_using_binary_search"
   }
 }
 type_info {
