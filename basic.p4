@@ -112,8 +112,36 @@ control MyIngress(inout headers hdr,
         default_action = drop();
     }
 
+
+    ip4Addr_t one = 0x0a000101;
+    ip4Addr_t two = 0x0a000202;
+    ip4Addr_t three = 0x0a000303;
+    ip4Addr_t four = 0x0a000404;
+    ip4Addr_t five = 0x0a000505;
+    ip4Addr_t six = 0x0a000606;
+    ip4Addr_t seven = 0x0a000707;
+
     action forward_using_binary_search() {
-        mark_to_drop(standard_metadata);
+        ip4Addr_t dst_IP_Addr = hdr.ipv4.dstAddr;
+	// binary search
+	if (dst_IP_Addr == four) {
+	   standard_metadata.egress_spec = 4;
+	}
+	else if (dst_IP_Addr < four) {
+	   // binary search in left subtree...
+	   standard_metadata.egress_spec = 4;
+	}
+	else // dst_IP_Addr > 4
+	{
+	   // binary search in right subtree...
+	   standard_metadata.egress_spec = 4;
+	}
+
+	hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
+	//hdr.ethernet.dstAddr
+	hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
+
+	//mark_to_drop(standard_metadata);
     }
 
     table ipv4_exact {
