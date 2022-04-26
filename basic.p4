@@ -97,44 +97,48 @@ control MyIngress(inout headers hdr,
         hdr.ethernet.dstAddr = dstAddr;
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
     }
+    table lvl3 {
+        key = {
+            hdr.ipv4.dstAddr : exact;
+        }
+        actions = {
+           set_next_hop;
+           drop;
+        }
+       const default_action = drop;
+    }
 
+    table lvl2 {
+        key = {
+            hdr.ipv4.dstAddr : exact;
+        }
+        actions = {
+           set_next_hop;
+        }
+    }
 
-    table test {
+    table lvl1 {
 	key = {
 	    hdr.ipv4.dstAddr : exact;
 	}
 	actions = {
 	   set_next_hop;
-       drop;
 	}
-	const entries = {
-	    10.0.2.2 : set_next_hop();
-	}
-       const default_action = drop; 
     }
 
     apply {
         if (hdr.ipv4.isValid()) {
-            test.apply();
+           if( !lvl1.apply().hit ) {
+		if(!lvl2.apply().hit) {
+		    if(!lvl3.apply().hit) {
+			set_next_hop(48w0x080000000888, 8);
+		    }
+		}
+	   }
         }
     }
 }
 
-/*
-    table l1_binsearch {
-	key = {
-	    hdr.ipv4.dstAddr : exact;
-	}
-	actions = {
-	   set_next_hop;
-	   comparison;
-	}
-	const entries = {
-	    4 : set_next_hop();
-	}
-       const default_action = comparison; 
-    }
-*/
 
 /*************************************************************************
 ****************  E G R E S S   P R O C E S S I N G   *******************
