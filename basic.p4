@@ -58,7 +58,7 @@ parser MyParser(packet_in packet,
     state parse_ethernet {
         packet.extract(hdr.ethernet);
         transition select(hdr.ethernet.etherType) {
-TYPE_IPV4: parse_ipv4;
+            TYPE_IPV4: parse_ipv4;
             default: accept;
         }
     }
@@ -91,51 +91,15 @@ control MyIngress(inout headers hdr,
         mark_to_drop(standard_metadata);
     }
 
-    action set_next_hop(macAddr_t dstAddr, egressSpec_t port) {
+    action exact_set_next_hop(ipv4 nextHop, macAddr_t dstAddr, egressSpec_t port) {
         standard_metadata.egress_spec = port;
         hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
         hdr.ethernet.dstAddr = dstAddr;
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
-    }
-    table lvl3 {
-        key = {
-            hdr.ipv4.dstAddr : exact;
-        }
-        actions = {
-           set_next_hop;
-           drop;
-        }
-       const default_action = drop;
-    }
-
-    table lvl2 {
-        key = {
-            hdr.ipv4.dstAddr : exact;
-        }
-        actions = {
-           set_next_hop;
-        }
-    }
-
-    table lvl1 {
-	key = {
-	    hdr.ipv4.dstAddr : exact;
-	}
-	actions = {
-	   set_next_hop;
-	}
+        hdr.ipv4.srcAddr = nextHop;
     }
 
     apply {
-        if (hdr.ipv4.isValid()) {
-           if( !lvl1.apply().hit ) {
-		if(!lvl2.apply().hit) {
-		    if(!lvl3.apply().hit) {
-			set_next_hop(48w0x080000000888, 8);
-		    }
-		}
-	   }
-        }
     }
 }
 
