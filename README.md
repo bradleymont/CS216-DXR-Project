@@ -16,8 +16,20 @@ A: in **ipv4.srcAddr**.
 ```
    port 1 	   port 2
 h1 =======> switch =======> h2
+		   port 3
+		   =======> h3
+		   port 4
+		   =======> h4
+		   port 5
+		   =======> h5
+		   port 6
+		   =======> h6
 
 h2 mac is 08:00:00:00:02:22
+h3 mac is 08:00:00:00:03:33
+h4 mac is 08:00:00:00:04:44
+h5 mac is 08:00:00:00:05:55
+h6 mac is 08:00:00:00:06:66
 ```
 
 # Runtime table
