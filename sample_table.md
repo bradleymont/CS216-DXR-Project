@@ -75,6 +75,11 @@
         "action_name": "MyIngress.L2_respond",
         "action_params": { "ans": "04000002" }
       },
+      { "table": "MyIngress.L2",
+        "match": { "m": 3 },
+        "action_name": "MyIngress.L2_respond",
+        "action_params": { "ans": "ffff0002" }
+      },
       { "table": "MyEgress.L3",
         "match": { "meta.ip_L": 0 },
         "action_name": "MyEgress.L3_respond",
