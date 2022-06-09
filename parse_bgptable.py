@@ -33,14 +33,3 @@ def parse_bgp_table_file(bgp_table_file_path):
     bgp_table_entries = list(map(convert_entry_to_prefix_nexthop_pair, bgp_table_entries))
 
     return bgp_table_entries
-
-def main():
-    bgp_table_file_path = "bgptable.txt"
-    bgp_table_entries = parse_bgp_table_file(bgp_table_file_path)
-
-    # printing the first 10 entries (TODO: delete)
-    for i in range(9):
-        print(bgp_table_entries[i])
-
-if __name__ == "__main__":
-    main()
