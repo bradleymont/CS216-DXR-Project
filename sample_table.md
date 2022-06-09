@@ -10,7 +10,7 @@
 // repeats up to entry 254
 1*255+1 (i.e. 1.0): 0,12w0,19w1 // offset into L3
 // 256 (1.1) repeats 255
-258 (i.e. 1.2): 0,12w3,19w0 // not short type, make 3 entries in L2 starting at offset 0
+258 (i.e. 1.2): 0,12w3,19w0 // not short type, make 4-1 entries in L2 starting at offset 0
 259 (1.3): 0,12w0, 19w1
 // 260-511 repeat 258
 2*255+1 (i.e. 2.0): 0,12w0,19w0
