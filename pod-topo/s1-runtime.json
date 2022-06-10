@@ -3,5 +3,70 @@
   "p4info": "build/basic.p4.p4info.txt",
   "bmv2_json": "build/basic.json",
   "table_entries": [
+      { "table": "MyIngress.L1",
+        "match": { "meta.ip_H": "0000" },
+        "action_name": "MyIngress.L1_respond",
+        "action_params": { "ans": "00000001" }
+      },
+      { "table": "MyIngress.L1",
+        "match": { "meta.ip_H": "0100" },
+        "action_name": "MyIngress.L1_respond",
+        "action_params": { "ans": "00000002" }
+      },
+      { "table": "MyIngress.L1",
+        "match": { "meta.ip_H": "0102" },
+        "action_name": "MyIngress.L1_respond",
+        "action_params": { "ans": "00200000" }
+      },
+      { "table": "MyIngress.L1",
+        "match": { "meta.ip_H": "0103" },
+        "action_name": "MyIngress.L1_respond",
+        "action_params": { "ans": "00000002" }
+      },
+      { "table": "MyIngress.L1",
+        "match": { "meta.ip_H": "0200" },
+        "action_name": "MyIngress.L1_respond",
+        "action_params": { "ans": "00000001" }
+      },
+      { "table": "MyIngress.L2",
+        "match": { "m": 0 },
+        "action_name": "MyIngress.L2_respond",
+        "action_params": { "ans": "00000003" }
+      },
+      { "table": "MyIngress.L2",
+        "match": { "m": 1 },
+        "action_name": "MyIngress.L2_respond",
+        "action_params": { "ans": "03000004" }
+      },
+      { "table": "MyIngress.L2",
+        "match": { "m": 2 },
+        "action_name": "MyIngress.L2_respond",
+        "action_params": { "ans": "04000003" }
+      },
+      { "table": "MyIngress.L2",
+        "match": { "m": 3 },
+        "action_name": "MyIngress.L2_respond",
+        "action_params": { "ans": "ffff0003" }
+      },
+      { "table": "MyEgress.L3",
+        "match": { "meta.ip_L": 1 },
+        "action_name": "MyEgress.L3_respond",
+        "action_params": { "ans": "0.0.0.0" }
+      },
+      { "table": "MyEgress.L3",
+        "match": { "meta.ip_L": 2 },
+        "action_name": "MyEgress.L3_respond",
+        "action_params": { "ans": "0.0.0.1" }
+      },
+      { "table": "MyEgress.L3",
+        "match": { "meta.ip_L": 3 },
+        "action_name": "MyEgress.L3_respond",
+        "action_params": { "ans": "0.0.0.2" }
+      },
+      { "table": "MyEgress.L3",
+        "match": { "meta.ip_L": 4 },
+        "action_name": "MyEgress.L3_respond",
+        "action_params": { "ans": "0.0.0.3" }
+      }
   ]
 }
