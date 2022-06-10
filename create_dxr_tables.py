@@ -96,6 +96,7 @@ def build_lookup_table(prefix_to_entries, interval_to_next_hop, next_hop_to_offs
             num_unique_LSBs_12_bit = convert_int_to_12_bits(num_unique_LSBs)
 
             offset_into_L2_19_bit = convert_int_to_19_bits(curr_offset_into_L2)
+            curr_offset_into_L2 += num_unique_LSBs
 
             lookup_table_val_bin = "0" + num_unique_LSBs_12_bit + offset_into_L2_19_bit
 
