@@ -174,10 +174,13 @@ control MyIngress(inout headers hdr, inout metadata meta,
 control MyEgress(inout headers hdr, inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
     action L3_respond(ip4Addr_t ans) { hdr.ipv4.dstAddr = ans; }
+    action drop() { mark_to_drop(standard_metadata); exit; }
+
     table L3 {
         key = { meta.ip_L : exact; } //using meta.ip_L as offset into L3 table
-        actions = { L3_respond; }
+        actions = { L3_respond; drop(); }
         size = 65536;
+        default_action = drop();
     }
 
     apply { 

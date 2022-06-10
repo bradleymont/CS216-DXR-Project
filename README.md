@@ -1,3 +1,16 @@
+# CS216 P4 Project
+
+See our report
+[here](https://docs.google.com/document/d/1jsXUteixMXiwWtKG3EKOCcSrPSZ_2mtfByLeMBqN0jM/edit)  
+
+## Usage
+```
+> make clean && make # assuming you have the behavioral model and openflow set up correctly
+mininet> h2 ./receive.py &
+mininet> h1 ./send.py [QUERY]
+mininet> h2 sync # no-op to force flush of stdout
+```
+
 # Headers
 - `ethernet_t`: needed as packets are sent on mininet over ethernet
 	- `dstAddr`: ignore
@@ -10,15 +23,6 @@
 Q: where does next hop ip address get put?
 A: in **ipv4.dstAddr**.
 
-# Testing
-```
-$ make clean && make
-mininet> h2 ./receive.py &
-mininet> h1 ./send.py <QUERY_IP_ADDR>
-    *confirms send*
-mininet> h2 sync
-    *should confirm answer*
-```
 
 # Topology
 ```
@@ -106,11 +110,9 @@ then chain multiple applies based on the variables
 ## parser:
 - cannot overwrite incoming values in parser
 
-## Checksum:
-- can we do l1 table lookup in checksum?
-
 ## Ingress:
 - only place ETHERNET forwarding logic works fully correctly
+- can only apply tables once, resubmit to loop
 
 ## Egress block:
 - cannot change egress port in egress block
