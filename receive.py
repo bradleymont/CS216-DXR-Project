@@ -14,7 +14,6 @@ from scapy.all import (
 )
 from scapy.layers.inet import _IPOption_HDR
 
-
 def get_if():
     ifs=get_if_list()
     iface=None
@@ -39,21 +38,26 @@ class IPOption_MRI(IPOption):
                                    [],
                                    IntField("", 0),
                                    length_from=lambda pkt:pkt.count*4) ]
-def handle_pkt(pkt):
+def handle_pkt(pkt, x):
     if TCP in pkt and pkt[TCP].dport == 1234:
-        print("got a packet")
-        pkt.show2()
-    #    hexdump(pkt)
+        print("Got packet #" + str(x))
+        print("IP.dst: "+pkt.payload.getfieldval("dst"))
         sys.stdout.flush()
 
-
+count = 0
 def main():
     ifaces = [i for i in os.listdir('/sys/class/net/') if 'eth' in i]
     iface = ifaces[0]
     print("sniffing on %s" % iface)
     sys.stdout.flush()
+
+    def l(x):
+        global count
+        handle_pkt(x, count)
+        count += 1
+
     sniff(iface = iface,
-          prn = lambda x: handle_pkt(x))
+          prn = l)
 
 if __name__ == '__main__':
     main()

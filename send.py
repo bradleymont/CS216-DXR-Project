@@ -20,17 +20,15 @@ def get_if():
 
 def main():
 
-    if len(sys.argv)<3:
-        print('pass 2 arguments: <destination> "<message>"')
+    if len(sys.argv)<2:
+        print('usage: ./send.py IP_ADDRESS')
         exit(1)
 
-    addr = socket.gethostbyname(sys.argv[1])
     iface = get_if()
 
-    print("sending on interface %s to %s" % (iface, str(addr)))
+    print("sending on interface %s with dst %s" % (iface, sys.argv[1]))
     pkt =  Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
-    pkt = pkt /IP(dst=addr) / TCP(dport=1234, sport=random.randint(49152,65535)) / sys.argv[2]
-    pkt.show2()
+    pkt = pkt /IP(dst=sys.argv[1]) / TCP(dport=1234, sport=random.randint(49152,65535)) / '_'
     sendp(pkt, iface=iface, verbose=False)
 
 
