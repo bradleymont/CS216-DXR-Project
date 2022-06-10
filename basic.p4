@@ -2,6 +2,9 @@
 #include <core.p4>
 #include <v1model.p4>
 
+#define PKT_INSTANCE_TYPE_NORMAL 0
+#define PKT_INSTANCE_TYPE_RESUBMIT 6
+
 const bit<16> TYPE_IPV4 = 0x800;
 
 /*************************************************************************
@@ -34,7 +37,12 @@ header ipv4_t {
 }
 
 struct metadata {
-    /* empty */
+    bit<16> ip_H;
+    bit<16> ip_L; // or L3 query
+    @field_list(1)
+    bit<19> l;
+    @field_list(1)
+    bit<19> r;
 }
 
 struct headers {
@@ -65,6 +73,8 @@ parser MyParser(packet_in packet,
 
     state parse_ipv4 {
         packet.extract(hdr.ipv4);
+        meta.ip_H = hdr.ipv4.dstAddr[31:16];
+        meta.ip_L = hdr.ipv4.dstAddr[15:0];
         transition accept;
     }
 
@@ -75,7 +85,7 @@ parser MyParser(packet_in packet,
  *************************************************************************/
 
 control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
-    apply {  }
+    apply { }
 }
 
 
@@ -83,23 +93,76 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
  **************  I N G R E S S   P R O C E S S I N G   *******************
  *************************************************************************/
 
-control MyIngress(inout headers hdr,
-        inout metadata meta,
+control MyIngress(inout headers hdr, inout metadata meta,
         inout standard_metadata_t standard_metadata) {
 
-    action drop() {
-        mark_to_drop(standard_metadata);
+    bit<32> tmp = 0;
+    bit<19> m;
+
+    action drop() { mark_to_drop(standard_metadata); exit; }
+    action set_forwarding() {
+        standard_metadata.egress_spec = 2;
+        hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
+        hdr.ethernet.dstAddr = 48w0x080000000222;
+        hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
     }
 
-    action exact_set_next_hop(ipv4 nextHop, macAddr_t dstAddr, egressSpec_t port) {
-        standard_metadata.egress_spec = port;
-        hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
-        hdr.ethernet.dstAddr = dstAddr;
-        hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
-        hdr.ipv4.srcAddr = nextHop;
+    action L1_respond(bit<32> ans) { tmp = ans; }
+
+    table L1 { key = { meta.ip_H : exact; }
+        actions = { L1_respond; drop; }
+        size = 65536;
+        default_action = drop();
     }
+
+    action L2_respond(bit<32> ans) { tmp = ans; }
+
+    table L2 { key = { m : exact; }
+        actions = { L2_respond; drop; }
+        size = 524288;
+        default_action = drop();
+    }
+
+/*
+    table debug {
+      key = { meta.r : exact; }
+      actions = {}
+    }
+*/
 
     apply {
+        if(standard_metadata.instance_type == PKT_INSTANCE_TYPE_NORMAL) {
+            L1.apply();
+            if(tmp[30:19] == 0) {
+                meta.ip_L = tmp[15:0]; // only take 16 bc know first 3 must be 0
+                set_forwarding(); 
+                exit; // idiom for forward and exit
+            }
+            meta.l = tmp[18:0]; //inclusive
+            meta.r = (meta.l + (bit<19>)tmp[30:19]) - 1; //inclusive
+            resubmit_preserving_field_list(1); 
+            exit; // idiom for restart and resubmit
+        }
+
+        //debug.apply();
+
+        m = (bit<19>)(((bit<20>)meta.l + (bit<20>)meta.r) >> 1); // (r+l)/2 wo overflow
+        if (meta.l >= meta.r)
+            drop();
+
+        L2.apply();
+
+        // exact match or end of search
+        if(meta.r == meta.l + 1 || meta.ip_L == tmp[31:16]) {
+            meta.ip_L = tmp[15:0];
+            set_forwarding();
+            exit;
+        }
+        if(meta.ip_L < tmp[31:16])
+            meta.r = m;
+        else 
+            meta.l = m;
+        resubmit_preserving_field_list(1);
     }
 }
 
@@ -108,10 +171,18 @@ control MyIngress(inout headers hdr,
 ****************  E G R E S S   P R O C E S S I N G   *******************
 *************************************************************************/
 
-control MyEgress(inout headers hdr,
-                 inout metadata meta,
+control MyEgress(inout headers hdr, inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
-    apply {  }
+    action L3_respond(ip4Addr_t ans) { hdr.ipv4.dstAddr = ans; }
+    table L3 {
+        key = { meta.ip_L : exact; } //using meta.ip_L as offset into L3 table
+        actions = { L3_respond; }
+        size = 65536;
+    }
+
+    apply { 
+        L3.apply();
+    }
 }
 
 /*************************************************************************

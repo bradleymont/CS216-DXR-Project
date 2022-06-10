@@ -53,6 +53,9 @@ def encodeNum(number, bitwidth):
         raise Exception("Number, %d, does not fit in %d bits" % (number, bitwidth))
     return bytes.fromhex('0' * (byte_len * 2 - len(num_str)) + num_str)
 
+def encodeHex(number):
+    return bytes.fromhex(number)
+
 def decodeNum(encoded_number):
     return int(encoded_number.hex(), 16)
 
@@ -68,8 +71,8 @@ def encode(x, bitwidth):
         elif matchesIPv4(x):
             encoded_bytes = encodeIPv4(x)
         else:
-            # Assume that the string is already encoded
-            encoded_bytes = x
+            # Assume that the string encoded as hexadecimal
+            encoded_bytes = encodeHex(x)
     elif type(x) == int:
         encoded_bytes = encodeNum(x, bitwidth)
     else:
