@@ -92,6 +92,8 @@ def build_lookup_table(prefix_to_entries, interval_to_next_hop, next_hop_to_offs
 
     curr_offset_into_L2 = 0
 
+    last_entry_offset_into_L3 = None
+
     i = 0
     for i in range(len(prefix_keys) - 1):
         curr_prefix = prefix_keys[i]
@@ -107,13 +109,33 @@ def build_lookup_table(prefix_to_entries, interval_to_next_hop, next_hop_to_offs
             offset_into_L3 = next_hop_to_offset[next_hop]
             offset_19_bits = convert_int_to_19_bits(offset_into_L3)
 
+            last_entry_offset_into_L3 = offset_19_bits
+
             lookup_table_val_bin = ("0" * 13) + offset_19_bits
             lookup_table_val_hex = convert_bin_string_to_hex(lookup_table_val_bin)
         else:
-            num_unique_LSBs = len(matching_entries_list)
-            num_unique_LSBs_12_bit = convert_int_to_12_bits(num_unique_LSBs)
-
             offset_into_L2_19_bit = convert_int_to_19_bits(curr_offset_into_L2)
+            num_unique_LSBs = len(matching_entries_list)
+
+            # if the first LSB != 0.0
+            #   then the first L2 entry should be
+            #   16 bits of zero
+            #   16 bits of the offset into L3 for the next hop of the last entry of the previous MSB
+            if get_last_16_bits_str(matching_entries_list[0]) != "0.0":
+                num_unique_LSBs += 1
+
+                if len(last_entry_offset_into_L3) == 19:
+                    # convert to 16 bits
+                    last_entry_offset_into_L3 = last_entry_offset_into_L3[3:]
+                
+                range_table_val_bin = ("0" * 16) + last_entry_offset_into_L3
+                range_table_val_hex = convert_bin_string_to_hex(range_table_val_bin)
+
+                range_table.append(range_table_val_hex)
+
+                curr_offset_into_L2 += 1
+                            
+            
 
             # add to L2
             for matching_entry in matching_entries_list:
@@ -124,6 +146,8 @@ def build_lookup_table(prefix_to_entries, interval_to_next_hop, next_hop_to_offs
                 offset_into_L3 = next_hop_to_offset[next_hop]
                 offset_16_bits = convert_int_to_16_bits(offset_into_L3)
 
+                last_entry_offset_into_L3 = offset_16_bits
+
                 range_table_val_bin = matching_entry_lsb_16_bit + offset_16_bits
                 range_table_val_hex = convert_bin_string_to_hex(range_table_val_bin)
 
@@ -131,6 +155,24 @@ def build_lookup_table(prefix_to_entries, interval_to_next_hop, next_hop_to_offs
 
                 curr_offset_into_L2 += 1
 
+            # if the last LSB != "255.255"
+            #   add one more L2 entry with LSB = "255.255"
+            #   and the same offset into L3 as the entry right before it
+            if get_last_16_bits_str(matching_entries_list[-1]) != "255.255":
+                num_unique_LSBs += 1
+
+                if len(last_entry_offset_into_L3) == 19:
+                    # convert to 16 bits
+                    last_entry_offset_into_L3 = last_entry_offset_into_L3[3:]
+                
+                range_table_val_bin = ("1" * 16) + last_entry_offset_into_L3
+                range_table_val_hex = convert_bin_string_to_hex(range_table_val_bin)
+
+                range_table.append(range_table_val_hex)
+
+                curr_offset_into_L2 += 1
+                
+            num_unique_LSBs_12_bit = convert_int_to_12_bits(num_unique_LSBs)
             lookup_table_val_bin = "0" + num_unique_LSBs_12_bit + offset_into_L2_19_bit
 
         lookup_table_val_hex = convert_bin_string_to_hex(lookup_table_val_bin)
