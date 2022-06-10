@@ -129,10 +129,10 @@ def merge_interval_to_next_hop_structure(interval_to_next_hop):
 
 def build_search_data_structure():
     bgp_table_file_path = "bgptable.txt"
-    bgp_table_entries = parse_bgptable.parse_bgp_table_file(bgp_table_file_path)
+    #bgp_table_entries = parse_bgptable.parse_bgp_table_file(bgp_table_file_path)
 
     # sample data
-    '''
+    
     bgp_table_entries = [
         ('0.0.0.0/0', 'A'),
         ('1.0.0.0/8', 'B'),
@@ -140,7 +140,7 @@ def build_search_data_structure():
         ('1.2.3.0/24', 'D'),
         ('1.2.4.5', 'C')
     ]
-    '''
+    
 
     # maps the beginning range value to a minheap of all the
     # BGP table entries with that beginning range value
