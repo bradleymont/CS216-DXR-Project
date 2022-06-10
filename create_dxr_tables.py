@@ -11,12 +11,28 @@ def get_last_16_bits_str(ip_addr):
     last_2_bytes_list = str(ip_addr).split(".")[2:]
     return ".".join(last_2_bytes_list)
 
+# converts "X.Y" to bits
+def dot_notation_to_bits(ip_addr):
+    upper_byte_str, lower_byte_str = ip_addr.split(".")
+
+    upper_byte_int = int(upper_byte_str)
+    lower_byte_int = int(lower_byte_str)
+
+    return convert_int_to_8_bits(upper_byte_int) + convert_int_to_8_bits(lower_byte_int)
+
+
 # converts 16 to '0000000000000010000'
 def convert_int_to_19_bits(offset_int):
     return f'{offset_int:019b}'
 
+def convert_int_to_16_bits(offset_int):
+    return f'{offset_int:016b}'
+
 def convert_int_to_12_bits(offset_int):
     return f'{offset_int:012b}'
+
+def convert_int_to_8_bits(offset_int):
+    return f'{offset_int:08b}'
 
 def convert_bin_string_to_hex(bin_str):
     return '{:0{width}x}'.format(int(bin_str,2), width=8)
@@ -68,6 +84,8 @@ def build_lookup_table(prefix_to_entries, interval_to_next_hop, next_hop_to_offs
 
     lookup_table = dict()
 
+    range_table = []
+
     prefix_keys = list(prefix_to_entries.keys())
 
     prefix_keys.append("STOP")
@@ -96,7 +114,22 @@ def build_lookup_table(prefix_to_entries, interval_to_next_hop, next_hop_to_offs
             num_unique_LSBs_12_bit = convert_int_to_12_bits(num_unique_LSBs)
 
             offset_into_L2_19_bit = convert_int_to_19_bits(curr_offset_into_L2)
-            curr_offset_into_L2 += num_unique_LSBs
+
+            # add to L2
+            for matching_entry in matching_entries_list:
+                matching_entry_lsb_16_bit_dot_notation = get_last_16_bits_str(matching_entry)
+                matching_entry_lsb_16_bit = dot_notation_to_bits(matching_entry_lsb_16_bit_dot_notation)
+
+                next_hop = interval_to_next_hop[matching_entry]
+                offset_into_L3 = next_hop_to_offset[next_hop]
+                offset_16_bits = convert_int_to_16_bits(offset_into_L3)
+
+                range_table_val_bin = matching_entry_lsb_16_bit + offset_16_bits
+                range_table_val_hex = convert_bin_string_to_hex(range_table_val_bin)
+
+                range_table.append(range_table_val_hex)
+
+                curr_offset_into_L2 += 1
 
             lookup_table_val_bin = "0" + num_unique_LSBs_12_bit + offset_into_L2_19_bit
 
@@ -106,25 +139,15 @@ def build_lookup_table(prefix_to_entries, interval_to_next_hop, next_hop_to_offs
             lookup_table[curr_prefix] = lookup_table_val_hex
             curr_prefix = increment_prefix(curr_prefix)
 
-    return lookup_table
+    return lookup_table, range_table
 
-
-def main():
+def create_dxr_tables():
     interval_to_next_hop = build_search_data_structure()
 
     prefix_to_entries = group_by_first_16_bits(interval_to_next_hop)
 
     next_hop_to_offset = build_next_hop_table(interval_to_next_hop)
 
-    lookup_table = build_lookup_table(prefix_to_entries, interval_to_next_hop, next_hop_to_offset)
+    lookup_table, range_table = build_lookup_table(prefix_to_entries, interval_to_next_hop, next_hop_to_offset)
 
-    
-    # print first 10 entries of lookup table
-    i = 0
-    for key in lookup_table:
-        if i == 10: break
-        print(key, lookup_table[key])
-        i += 1
-
-if __name__ == "__main__":
-    main()
+    return lookup_table, range_table, next_hop_to_offset
